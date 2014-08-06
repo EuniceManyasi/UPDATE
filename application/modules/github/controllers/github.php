@@ -3,12 +3,19 @@ if (!defined('BASEPATH'))
 	exit('No direct script access allowed');
 
 class Github extends MY_Controller {
-	var $nascop_url = "http://41.57.109.241/NASCOP/";
+
+	var $nascop_url = "";
 	function __construct() {
 		parent::__construct();
 		ini_set("max_execution_time", "100000");
+		ini_set("allow_url_fopen", '1');
 		$this -> load -> library('github_updater');
 		$this -> load -> library('Unzip');
+
+		$dir = realpath($_SERVER['DOCUMENT_ROOT']);
+	    $link = $dir . "\\ADT\\assets\\nascop.txt";
+		$this -> nascop_url = file_get_contents($link);
+
 	}
 
 	public function index($facility = "") {
@@ -65,7 +72,9 @@ class Github extends MY_Controller {
 			$first_dir = $this -> unzip_update($hash);
 			$this -> copy_files($original_hash);
 			$message = 'Done updating System';
-			$this -> runSQL();
+
+			//$this -> runSQL();
+
 			$this -> setLog($original_hash);
 			$this -> set_config_hash($original_hash);
 			$message .= $this -> send_log($original_hash);
@@ -113,14 +122,18 @@ class Github extends MY_Controller {
 	}
 
 	public function runSQL() {
-		$link = base_url() . 'assets/sql.txt';
-		$link = str_replace("UPDATE", "ADT", $link);
+
+	    $dir = realpath($_SERVER['DOCUMENT_ROOT']);
+	    $link = $dir . "\\ADT\\assets\sql.txt";
 		$results = file_get_contents($link);
 		if ($results != null) {
 			$results = explode(";", $results);
 			foreach ($results as $i => $result) {
 				if ($result != null) {
+				    $db_debug = $this->db->db_debug;
+					$this->db->db_debug = false;
 					$this -> db -> query($result);
+					$this->db->db_debug = $db_debug;
 				}
 			}
 		}
@@ -144,7 +157,7 @@ class Github extends MY_Controller {
 		return false;
 	}
 
-	public function send_log($original_hash) {
+	public function send_log($original_hash="") {
 		$url = $this -> nascop_url . "sync/gitlog";
 		$facility_code = $this -> session -> userdata("facility");
 		$results = array("facility" => $facility_code, "hash_value" => $original_hash);
