@@ -22,7 +22,7 @@ $config['github_branch'] = 'master';
  * automatically set by the library after subsequent updates.
  */
 
-$config['current_commit'] = 'abb9d4ae8bb82dc42034ad8251d5e8bd62f23b43';
+$config['current_commit'] = '3f07f4ec1715e31aea69d3341283f7c5897dac17';
 
 
 /**
